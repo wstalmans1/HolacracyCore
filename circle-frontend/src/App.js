@@ -3,27 +3,22 @@ import { ethers } from "ethers";
 import Tree from "react-d3-tree";
 import { CIRCLE_HIERARCHY_ADDRESS, CIRCLE_HIERARCHY_ABI } from "./contractInfo";
 import CustomNode from "./CustomNode";
-import CircleDropdown from "./CircleDropdown";
 import "./App.css";
 
 const ROOT_ID = 0;
 
 function App() {
-  const [provider, setProvider] = useState();
-  const [signer, setSigner] = useState();
   const [contract, setContract] = useState();
   const [account, setAccount] = useState();
   const [treeData, setTreeData] = useState(null);
   const [circles, setCircles] = useState({});
   const [refresh, setRefresh] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [hoveredCircle, setHoveredCircle] = useState(null);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
-  const [hoverTimeout, setHoverTimeout] = useState(null);
   const [isTransactionPending, setIsTransactionPending] = useState(false);
   const [animationState, setAnimationState] = useState(0);
-  const [zoomLevel, setZoomLevel] = useState(0.6);
+  const [zoomLevel, setZoomLevel] = useState(0.4);
+  const [panPosition, setPanPosition] = useState({ x: 600, y: 100 });
+  const [selectedCircle, setSelectedCircle] = useState(null);
 
   // Connect wallet
   const connectWallet = async () => {
@@ -34,8 +29,6 @@ function App() {
     const _provider = new ethers.BrowserProvider(window.ethereum);
     await _provider.send("eth_requestAccounts", []);
     const _signer = await _provider.getSigner();
-    setProvider(_provider);
-    setSigner(_signer);
     setAccount(await _signer.getAddress());
     const _contract = new ethers.Contract(
       CIRCLE_HIERARCHY_ADDRESS,
@@ -110,49 +103,6 @@ function App() {
     fetchAllCircles();
   }, [contract, refresh, fetchCircleTree, fetchAllCircles]);
 
-  // Handle circle hover events
-  const handleCircleHover = (event, circleId) => {
-    // Clear any existing timeout
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      setHoverTimeout(null);
-    }
-    
-    const rect = event.currentTarget.getBoundingClientRect();
-    setDropdownPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.bottom + 10
-    });
-    setHoveredCircle(circleId);
-    setShowDropdown(true);
-  };
-
-  const handleCircleLeave = () => {
-    // Set a timeout to close the dropdown after a delay
-    const timeout = setTimeout(() => {
-      setShowDropdown(false);
-      setHoveredCircle(null);
-    }, 300); // 300ms delay
-    setHoverTimeout(timeout);
-  };
-
-  const handleDropdownEnter = () => {
-    // Clear the timeout when hovering over the dropdown
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      setHoverTimeout(null);
-    }
-  };
-
-  const handleDropdownLeave = () => {
-    setShowDropdown(false);
-    setHoveredCircle(null);
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      setHoverTimeout(null);
-    }
-  };
-
   // Listen for events to refresh
   useEffect(() => {
     if (!contract) return;
@@ -179,6 +129,72 @@ function App() {
     }
   }, [isTransactionPending]);
 
+  // Calculate optimal zoom and position to show entire tree
+  const calculateOptimalView = useCallback((treeData) => {
+    if (!treeData) return { zoom: 0.6, pan: { x: 400, y: 50 } };
+
+    // Count total nodes and max depth to estimate tree size
+    const countNodes = (node, depth = 0) => {
+      let totalNodes = 1;
+      let maxDepth = depth;
+      
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => {
+          const childResult = countNodes(child, depth + 1);
+          totalNodes += childResult.totalNodes;
+          maxDepth = Math.max(maxDepth, childResult.maxDepth);
+        });
+      }
+      
+      return { totalNodes, maxDepth };
+    };
+
+    const { totalNodes, maxDepth } = countNodes(treeData);
+    
+    // Estimate tree dimensions based on react-d3-tree defaults
+    const nodeSize = { x: 200, y: 100 }; // From Tree component props
+    const separation = { siblings: 1.2, nonSiblings: 1.5 }; // From Tree component props
+    
+    // Estimate width: assume a balanced tree structure
+    const estimatedWidth = Math.max(totalNodes * nodeSize.x * 0.6, 400);
+    const estimatedHeight = maxDepth * nodeSize.y * separation.nonSiblings;
+    
+    // Container dimensions (approximate)
+    const containerWidth = 1200;
+    const containerHeight = 800;
+    
+    // Calculate zoom to fit the tree
+    const zoomX = containerWidth / (estimatedWidth + 200);
+    const zoomY = containerHeight / (estimatedHeight + 200);
+    
+    const optimalZoom = Math.min(zoomX, zoomY, 1.0);
+    
+    // Center the tree
+    const centerX = containerWidth / 2;
+    const centerY = 150; // Start a bit from the top
+    
+    return {
+      zoom: Math.max(optimalZoom, 0.2), // Lower minimum zoom
+      pan: { x: centerX, y: centerY }
+    };
+  }, []);
+
+  // Apply optimal view when tree data changes
+  useEffect(() => {
+    if (treeData && !loading) {
+      // Add a longer delay to ensure the tree is fully rendered
+      const timer = setTimeout(() => {
+        const optimalView = calculateOptimalView(treeData);
+        // Use a more conservative zoom to ensure everything is visible
+        const conservativeZoom = Math.min(optimalView.zoom * 0.8, 0.8);
+        setZoomLevel(conservativeZoom);
+        setPanPosition(optimalView.pan);
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [treeData, loading, calculateOptimalView]);
+
   // Zoom functions
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev + 0.1, 2.0));
@@ -186,6 +202,61 @@ function App() {
 
   const handleZoomOut = () => {
     setZoomLevel(prev => Math.max(prev - 0.1, 0.1));
+  };
+
+  const fitToView = () => {
+    if (treeData) {
+      const optimalView = calculateOptimalView(treeData);
+      // Use a more conservative zoom to ensure everything is visible
+      const conservativeZoom = Math.min(optimalView.zoom * 0.7, 0.6);
+      setZoomLevel(conservativeZoom);
+      setPanPosition(optimalView.pan);
+    }
+  };
+
+  // Handle circle actions (create, edit, move)
+  const handleCircleAction = async (action, data) => {
+    if (!window.ethereum) {
+      alert('Please install MetaMask!');
+      return;
+    }
+
+    setIsTransactionPending(true);
+    setAnimationState(0);
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(CIRCLE_HIERARCHY_ADDRESS, CIRCLE_HIERARCHY_ABI, signer);
+
+      let transaction;
+
+      switch (action) {
+        case 'create':
+          transaction = await contract.createCircle(data.purpose, data.circleType || 0, data.parentId || 0);
+          break;
+        case 'edit':
+          transaction = await contract.editCircle(data.circleId, data.purpose, data.circleType || 0);
+          break;
+        case 'move':
+          // For now, just log the move action
+          console.log('Move action:', data);
+          break;
+        default:
+          throw new Error('Unknown action');
+      }
+
+      if (transaction) {
+        await transaction.wait();
+        console.log('Transaction successful:', transaction);
+        await fetchAllCircles();
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Transaction failed: ' + error.message);
+    } finally {
+      setIsTransactionPending(false);
+    }
   };
 
   return (
@@ -199,107 +270,126 @@ function App() {
       <hr />
       {loading && <div>Loading hierarchy...</div>}
       {treeData && (
-        <div style={{ position: 'relative' }}>
-          {/* Tree Container */}
-          <div style={{ width: "100%", height: "500px", border: "1px solid #ccc", borderRadius: 8, background: "#fafbfc", marginBottom: 20 }}>
-            <Tree 
-              data={treeData} 
-              orientation="vertical" 
-              translate={{ x: 400, y: 50 }} 
-              zoomable={true} 
+        <div 
+          className="tree-container"
+          style={{ 
+            position: 'relative', 
+            width: '100%', 
+            height: 'calc(100vh - 200px)', // Extended height to accommodate dropdowns
+            overflow: 'hidden' // Prevent scrolling issues
+          }}
+        >
+          {loading ? (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '100%' 
+            }}>
+              Loading...
+            </div>
+          ) : (
+            <Tree
+              data={treeData}
+              orientation="vertical"
+              pathFunc="step"
+              translate={{ x: panPosition.x, y: panPosition.y }}
+              scaleExtent={{ min: 0.1, max: 2.0 }}
               zoom={zoomLevel}
-              separation={{ siblings: 2, nonSiblings: 2.5 }}
+              onZoom={(zoom) => setZoomLevel(zoom)}
+              onUpdate={(update) => setPanPosition(update.translate)}
               nodeSize={{ x: 200, y: 100 }}
-              renderCustomNodeElement={(rd3tProps) => (
-                <CustomNode 
-                  {...rd3tProps} 
-                  onHover={handleCircleHover}
-                  onLeave={handleCircleLeave}
+              separation={{ siblings: 1.2, nonSiblings: 1.5 }}
+              renderCustomNodeElement={({ nodeDatum, toggleNode }) => (
+                <CustomNode
+                  nodeDatum={nodeDatum}
+                  toggleNode={toggleNode}
+                  onCircleAction={handleCircleAction}
+                  selectedCircle={selectedCircle}
+                  setSelectedCircle={setSelectedCircle}
+                  circles={circles}
+                  contract={contract}
+                  onSuccess={() => setRefresh((r) => r + 1)}
+                  setIsTransactionPending={setIsTransactionPending}
                 />
               )}
             />
-            
-            {/* Zoom Controls - Bottom Right Corner */}
-            <div style={{
-              position: 'absolute',
-              bottom: '15px',
-              right: '15px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '5px',
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              borderRadius: '8px',
-              padding: '8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              border: '1px solid rgba(0,0,0,0.1)'
-            }}>
-              <button
-                onClick={handleZoomIn}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#4ecdc4',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                title="Zoom In"
-              >
-                +
-              </button>
-              <span style={{
-                fontSize: '11px',
-                color: '#666',
-                textAlign: 'center',
-                padding: '2px 0'
-              }}>
-                {Math.round(zoomLevel * 100)}%
-              </span>
-              <button
-                onClick={handleZoomOut}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#4ecdc4',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                title="Zoom Out"
-              >
-                −
-              </button>
-            </div>
+          )}
+          
+          {/* Zoom Controls */}
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            zIndex: 100
+          }}>
+            <button
+              onClick={handleZoomIn}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                border: '2px solid #4ecdc4',
+                backgroundColor: 'white',
+                color: '#4ecdc4',
+                fontSize: '18px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+              title="Zoom In"
+            >
+              +
+            </button>
+            <button
+              onClick={handleZoomOut}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                border: '2px solid #4ecdc4',
+                backgroundColor: 'white',
+                color: '#4ecdc4',
+                fontSize: '18px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+              title="Zoom Out"
+            >
+              −
+            </button>
+            <button
+              onClick={fitToView}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                border: '2px solid #4ecdc4',
+                backgroundColor: 'white',
+                color: '#4ecdc4',
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+              title="Fit to View"
+            >
+              ⊞
+            </button>
           </div>
         </div>
       )}
       
-      {/* Dropdown for circle actions */}
-      {showDropdown && hoveredCircle !== null && (
-        <CircleDropdown
-          position={dropdownPosition}
-          circleId={hoveredCircle}
-          circles={circles}
-          contract={contract}
-          onClose={handleDropdownLeave}
-          onEnter={handleDropdownEnter}
-          onSuccess={() => setRefresh((r) => r + 1)}
-          setIsTransactionPending={setIsTransactionPending}
-        />
-      )}
-
       {/* Transaction Pending Overlay */}
       {isTransactionPending && (
         <div style={{

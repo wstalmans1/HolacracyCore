@@ -4,8 +4,8 @@ import EditCircleForm from './EditCircleForm';
 import MoveCircleForm from './MoveCircleForm';
 
 const CircleDropdown = ({ 
-  position, 
   circleId, 
+  circleName,
   circles, 
   contract, 
   onClose, 
@@ -26,27 +26,21 @@ const CircleDropdown = ({
     { id: 'move', label: 'Move', component: MoveCircleForm }
   ];
 
-  // Filter out root circle from edit/move options
-  const editableCircles = Object.entries(circles).filter(([id]) => Number(id) !== 0);
-  const movableCircles = editableCircles.filter(([id]) => Number(id) !== circleId);
-
   return (
     <div
       style={{
-        position: 'fixed',
-        left: position.x,
-        top: position.y,
-        transform: 'translateX(-50%)',
         backgroundColor: 'white',
         border: '2px solid #4ecdc4',
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        zIndex: 1000,
         minWidth: '300px',
-        maxWidth: '400px'
+        maxWidth: '400px',
+        maxHeight: '300px',
+        overflow: 'auto'
       }}
       onMouseEnter={onEnter}
       onMouseLeave={onClose}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Close button */}
       <button
@@ -72,10 +66,10 @@ const CircleDropdown = ({
         backgroundColor: '#f8f9fa'
       }}>
         <h3 style={{ margin: 0, fontSize: '16px', color: '#2c3e50' }}>
-          {circles[circleId]?.purpose || 'Circle'}
+          {circleName || 'Circle'}
         </h3>
         <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#666' }}>
-          ID: {circleId} - {circles[circleId]?.circleType === 0 ? "Policy" : "Implementation"}
+          ID: {circleId} - {circles && circles[circleId]?.circleType === 0 ? "Policy" : "Implementation"}
         </p>
       </div>
 
@@ -106,7 +100,7 @@ const CircleDropdown = ({
       </div>
 
       {/* Form Content */}
-      <div style={{ padding: '16px' }}>
+      <div style={{ padding: '12px' }}>
         {activeTab === 'create' && (
           <CreateCircleForm 
             contract={contract} 
