@@ -295,8 +295,10 @@ function App() {
               translate={{ x: panPosition.x, y: panPosition.y }}
               scaleExtent={{ min: 0.1, max: 2.0 }}
               zoom={zoomLevel}
-              onZoom={(zoom) => setZoomLevel(zoom)}
-              onUpdate={(update) => setPanPosition(update.translate)}
+              onUpdate={({ translate, zoom }) => {
+                setPanPosition(translate);
+                setZoomLevel(zoom);
+              }}
               nodeSize={{ x: 200, y: 100 }}
               separation={{ siblings: 1.2, nonSiblings: 1.5 }}
               collapsible={false}
