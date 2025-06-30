@@ -2,41 +2,58 @@ import React, { useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import CircleDropdown from './CircleDropdown';
 
-const CustomNode = ({ nodeDatum, toggleNode, onCircleAction, selectedCircle, setSelectedCircle, circles, contract, onSuccess, setIsTransactionPending }) => {
+const CustomNode = ({ nodeDatum, onCircleAction, selectedCircle, setSelectedCircle, circles, contract, onSuccess, setIsTransactionPending }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
+  const [hoverTimeout, setHoverTimeout] = useState(null);
   const dropdownRef = useRef(null);
   const nodeRef = useRef(null);
 
   const handleMouseEnter = (event) => {
-    // Do nothing on mouse enter - we'll use click instead
-  };
-
-  const handleMouseLeave = (event) => {
-    // Do nothing - let the dropdown stay open
-    // Only close via explicit user actions
-  };
-
-  const handleCircleClick = (event) => {
-    // Prevent the toggleNode from firing when we want to show dropdown
-    event.stopPropagation();
+    // Clear any existing timeout when entering the circle
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      setHoverTimeout(null);
+    }
     
     // Capture mouse position for dropdown positioning
     setDropdownPosition({ x: event.clientX, y: event.clientY });
     
-    // Show dropdown
+    // Show dropdown on hover
     setSelectedCircle(nodeDatum.attributes.id);
     setShowDropdown(true);
   };
 
+  const handleMouseLeave = (event) => {
+    // Close dropdown when mouse leaves the circle dot
+    const timeout = setTimeout(() => {
+      setShowDropdown(false);
+      setSelectedCircle(null);
+    }, 200);
+    
+    setHoverTimeout(timeout);
+  };
+
+  const handleCircleClick = (event) => {
+    // Do nothing on click
+  };
+
   const handleDropdownMouseEnter = () => {
-    // Do nothing - dropdown stays open
+    // Clear any existing timeout when entering the dropdown
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      setHoverTimeout(null);
+    }
   };
 
   const handleDropdownMouseLeave = (event) => {
-    // Completely disable mouse leave closing when dropdown is open
-    // Only allow closing via explicit user actions
-    return;
+    // Simple timeout to close dropdown when mouse leaves
+    const timeout = setTimeout(() => {
+      setShowDropdown(false);
+      setSelectedCircle(null);
+    }, 200);
+    
+    setHoverTimeout(timeout);
   };
 
   // Add click outside handler to close dropdown
@@ -82,12 +99,11 @@ const CustomNode = ({ nodeDatum, toggleNode, onCircleAction, selectedCircle, set
           fill: circleColor,
           stroke: '#2c3e50',
           strokeWidth: 2,
-          cursor: 'pointer'
+          cursor: 'default'
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleCircleClick}
-        onDoubleClick={toggleNode}
       />
       
       {/* HTML label for better typography */}
@@ -123,6 +139,7 @@ const CustomNode = ({ nodeDatum, toggleNode, onCircleAction, selectedCircle, set
         ReactDOM.createPortal(
           <div
             ref={dropdownRef}
+            data-dropdown-container="true"
             style={{
               position: 'fixed',
               left: `${dropdownPosition.x + 20}px`,

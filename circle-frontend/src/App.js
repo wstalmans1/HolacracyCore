@@ -216,11 +216,8 @@ function App() {
 
   // Handle circle actions (create, edit, move)
   const handleCircleAction = async (action, data) => {
-    if (!window.ethereum) {
-      alert('Please install MetaMask!');
-      return;
-    }
-
+    if (!contract) return;
+    setLoading(true);
     setIsTransactionPending(true);
     setAnimationState(0);
 
@@ -256,6 +253,8 @@ function App() {
       alert('Transaction failed: ' + error.message);
     } finally {
       setIsTransactionPending(false);
+      setLoading(false);
+      setRefresh((r) => r + 1);
     }
   };
 
@@ -300,10 +299,10 @@ function App() {
               onUpdate={(update) => setPanPosition(update.translate)}
               nodeSize={{ x: 200, y: 100 }}
               separation={{ siblings: 1.2, nonSiblings: 1.5 }}
-              renderCustomNodeElement={({ nodeDatum, toggleNode }) => (
+              collapsible={false}
+              renderCustomNodeElement={({ nodeDatum }) => (
                 <CustomNode
                   nodeDatum={nodeDatum}
-                  toggleNode={toggleNode}
                   onCircleAction={handleCircleAction}
                   selectedCircle={selectedCircle}
                   setSelectedCircle={setSelectedCircle}
