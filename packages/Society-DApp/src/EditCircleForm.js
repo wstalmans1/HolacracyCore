@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import CustomDropdown from "./CustomDropdown";
 
 const EditCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, compact = false, setIsTransactionPending }) => {
   const [circleId, setCircleId] = useState(preSelectedCircleId || "");
@@ -46,6 +47,15 @@ const EditCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
 
   // Exclude root from being edited
   const editableCircles = Object.entries(circles).filter(([id]) => Number(id) !== 0);
+  const circleOptions = editableCircles.map(([id, c]) => ({
+    value: id,
+    label: `${c.purpose} [${Number(c.circleType) === 0 ? "Policy" : "Implementation"}] (ID: ${id})`
+  }));
+
+  const circleTypeOptions = [
+    { value: 0, label: "Policy" },
+    { value: 1, label: "Implementation" }
+  ];
 
   const handleCircleSelect = (selectedId) => {
     setCircleId(selectedId);
@@ -62,24 +72,15 @@ const EditCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
     return (
       <form onSubmit={handleSubmit}>
         {!preSelectedCircleId && (
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-              Circle to Edit:
-            </label>
-            <select 
-              value={circleId} 
-              onChange={e => handleCircleSelect(e.target.value)} 
-              required
-              style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ddd', borderRadius: '4px' }}
-            >
-              <option value="">Select Circle</option>
-              {editableCircles.map(([id, c]) => (
-                <option key={id} value={id}>
-                  {c.purpose} [{c.circleType === 0 ? "Policy" : "Implementation"}] (ID: {id})
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomDropdown
+            options={circleOptions}
+            value={circleId}
+            onChange={handleCircleSelect}
+            placeholder="Select Circle"
+            label="Circle to Edit"
+            required
+            compact={true}
+          />
         )}
         <div style={{ marginBottom: '12px' }}>
           <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 'bold' }}>
@@ -94,20 +95,14 @@ const EditCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
             placeholder="Enter new purpose"
           />
         </div>
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-            New Circle Type:
-          </label>
-          <select
-            value={newCircleType}
-            onChange={(e) => setNewCircleType(Number(e.target.value))}
-            required
-            style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ddd', borderRadius: '4px' }}
-          >
-            <option value="0">Policy</option>
-            <option value="1">Implementation</option>
-          </select>
-        </div>
+        <CustomDropdown
+          options={circleTypeOptions}
+          value={newCircleType}
+          onChange={setNewCircleType}
+          label="New Circle Type"
+          required
+          compact={true}
+        />
         <button 
           type="submit" 
           disabled={loading || !circleId || !newPurpose} 
@@ -133,21 +128,14 @@ const EditCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
     <form onSubmit={handleSubmit} style={{ marginBottom: 24, background: "#f8f9fa", padding: 16, borderRadius: 8 }}>
       <h2>Edit Circle</h2>
       <div>
-        <label>Circle to Edit:&nbsp;
-          <select 
-            value={circleId} 
-            onChange={e => handleCircleSelect(e.target.value)} 
-            required
-            style={{ width: 300, marginBottom: 8 }}
-          >
-            <option value="">Select Circle</option>
-            {editableCircles.map(([id, c]) => (
-              <option key={id} value={id}>
-                {c.purpose} [{c.circleType === 0 ? "Policy" : "Implementation"}] (ID: {id})
-              </option>
-            ))}
-          </select>
-        </label>
+        <CustomDropdown
+          options={circleOptions}
+          value={circleId}
+          onChange={handleCircleSelect}
+          placeholder="Select Circle"
+          label="Circle to Edit"
+          required
+        />
       </div>
       <div>
         <label>New Purpose:&nbsp;
@@ -162,17 +150,13 @@ const EditCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
         </label>
       </div>
       <div>
-        <label>New Circle Type:&nbsp;
-          <select
-            value={newCircleType}
-            onChange={(e) => setNewCircleType(Number(e.target.value))}
-            required
-            style={{ width: 300 }}
-          >
-            <option value="0">Policy</option>
-            <option value="1">Implementation</option>
-          </select>
-        </label>
+        <CustomDropdown
+          options={circleTypeOptions}
+          value={newCircleType}
+          onChange={setNewCircleType}
+          label="New Circle Type"
+          required
+        />
       </div>
       <button 
         type="submit" 

@@ -1,5 +1,5 @@
 async function main() {
-    const contractAddress = "DEPLOYED_CONTRACT_ADDRESS"; // Replace with your contract's deployed address
+    const contractAddress = "0x272b742BA562752868a7fA4E30c48F965DCf91CC"; // Replace with your contract's deployed address
     
     console.log("Verifying contract...");
     try {

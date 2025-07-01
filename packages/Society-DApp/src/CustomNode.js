@@ -76,18 +76,18 @@ const CustomNode = ({ nodeDatum, onCircleAction, selectedCircle, setSelectedCirc
   }, [showDropdown, handleClickOutside]);
 
   const isRootCircle = nodeDatum.attributes.id === 0;
-  const hasChildren = nodeDatum.children && nodeDatum.children.length > 0;
+  const circleType = nodeDatum.attributes.type;
   
   // Color coding based on circle type and expansion state
   let circleColor;
   if (isRootCircle) {
-    circleColor = '#ff6b6b'; // Red for root circle
-  } else if (hasChildren) {
-    // For now, all circles with children will be teal (expanded)
-    // We need to implement proper collapse detection
-    circleColor = '#4ecdc4'; // Teal for circles with sub-circles
+    circleColor = '#e74c3c'; // A nice red for the root circle
+  } else if (circleType === 'Policy') {
+    circleColor = '#3498db'; // A nice blue for Policy circles
+  } else if (circleType === 'Implementation') {
+    circleColor = '#2ecc71'; // A nice green for Implementation circles
   } else {
-    circleColor = '#95a5a6'; // Gray for leaf circles (no sub-circles)
+    circleColor = '#95a5a6'; // A fallback gray
   }
 
   return (

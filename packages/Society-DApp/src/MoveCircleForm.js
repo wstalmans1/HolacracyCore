@@ -121,7 +121,7 @@ const MoveCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
               { value: "", label: "Select Circle" },
               ...movableCircles.map(([id, c]) => ({
                 value: id,
-                label: `${c.purpose} [${c.circleType === 0 ? "Policy" : "Implementation"}] (ID: ${id})`
+                label: `${c.purpose} [${Number(c.circleType) === 0 ? "Policy" : "Implementation"}] (ID: ${id})`
               }))
             ]}
             placeholder="Select Circle"
@@ -136,7 +136,7 @@ const MoveCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
             { value: "", label: "Select Parent" },
             ...Object.entries(circles).map(([id, c]) => ({
               value: id,
-              label: `${c.purpose} [${c.circleType === 0 ? "Policy" : "Implementation"}] (ID: ${id})`
+              label: `${c.purpose} [${Number(c.circleType) === 0 ? "Policy" : "Implementation"}] (ID: ${id})`
             }))
           ]}
           placeholder="Select Parent"
@@ -173,7 +173,7 @@ const MoveCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
             <option value="">Select Circle</option>
             {movableCircles.map(([id, c]) => (
               <option key={id} value={id}>
-                {c.purpose} [{c.circleType === 0 ? "Policy" : "Implementation"}] (ID: {id})
+                {c.purpose} [{Number(c.circleType) === 0 ? "Policy" : "Implementation"}] (ID: {id})
               </option>
             ))}
           </select>
@@ -185,7 +185,7 @@ const MoveCircleForm = ({ contract, circles, preSelectedCircleId, onSuccess, com
             <option value="">Select Parent</option>
             {Object.entries(circles).map(([id, c]) => (
               <option key={id} value={id}>
-                {c.purpose} [{c.circleType === 0 ? "Policy" : "Implementation"}] (ID: {id})
+                {c.purpose} [{Number(c.circleType) === 0 ? "Policy" : "Implementation"}] (ID: {id})
               </option>
             ))}
           </select>

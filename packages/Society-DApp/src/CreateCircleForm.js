@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import CustomDropdown from "./CustomDropdown";
 
 const CreateCircleForm = ({ contract, circles, preSelectedParentId, onSuccess, compact = false, setIsTransactionPending }) => {
   const [purpose, setPurpose] = useState("");
@@ -42,6 +43,16 @@ const CreateCircleForm = ({ contract, circles, preSelectedParentId, onSuccess, c
     }
   };
 
+  const circleTypeOptions = [
+    { value: 0, label: "Policy" },
+    { value: 1, label: "Implementation" }
+  ];
+
+  const parentCircleOptions = Object.entries(circles).map(([id, c]) => ({
+    value: Number(id),
+    label: `${c.purpose} [${Number(c.circleType) === 0 ? "Policy" : "Implementation"}] (ID: ${id})`
+  }));
+
   if (compact) {
     return (
       <form onSubmit={handleSubmit}>
@@ -58,36 +69,23 @@ const CreateCircleForm = ({ contract, circles, preSelectedParentId, onSuccess, c
             placeholder="Enter circle purpose"
           />
         </div>
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-            Type:
-          </label>
-          <select 
-            value={circleType} 
-            onChange={e => setCircleType(Number(e.target.value))}
-            style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ddd', borderRadius: '4px' }}
-          >
-            <option value={0}>Policy</option>
-            <option value={1}>Implementation</option>
-          </select>
-        </div>
+        <CustomDropdown
+          options={circleTypeOptions}
+          value={circleType}
+          onChange={setCircleType}
+          label="Type"
+          required
+          compact={true}
+        />
         {!preSelectedParentId && (
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-              Parent Circle:
-            </label>
-            <select 
-              value={parentId} 
-              onChange={e => setParentId(Number(e.target.value))}
-              style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #ddd', borderRadius: '4px' }}
-            >
-              {Object.entries(circles).map(([id, c]) => (
-                <option key={id} value={id}>
-                  {c.purpose} [{c.circleType === 0 ? "Policy" : "Implementation"}] (ID: {id})
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomDropdown
+            options={parentCircleOptions}
+            value={parentId}
+            onChange={setParentId}
+            label="Parent Circle"
+            required
+            compact={true}
+          />
         )}
         <button 
           type="submit" 
@@ -125,23 +123,22 @@ const CreateCircleForm = ({ contract, circles, preSelectedParentId, onSuccess, c
         </label>
       </div>
       <div>
-        <label>Type:&nbsp;
-          <select value={circleType} onChange={e => setCircleType(Number(e.target.value))}>
-            <option value={0}>Policy</option>
-            <option value={1}>Implementation</option>
-          </select>
-        </label>
+        <CustomDropdown
+          options={circleTypeOptions}
+          value={circleType}
+          onChange={setCircleType}
+          label="Type"
+          required
+        />
       </div>
       <div>
-        <label>Parent Circle:&nbsp;
-          <select value={parentId} onChange={e => setParentId(Number(e.target.value))}>
-            {Object.entries(circles).map(([id, c]) => (
-              <option key={id} value={id}>
-                {c.purpose} [{c.circleType === 0 ? "Policy" : "Implementation"}] (ID: {id})
-              </option>
-            ))}
-          </select>
-        </label>
+        <CustomDropdown
+          options={parentCircleOptions}
+          value={parentId}
+          onChange={setParentId}
+          label="Parent Circle"
+          required
+        />
       </div>
       <button type="submit" disabled={loading || !purpose} style={{ marginTop: 8 }}>
         {loading ? "Creating..." : "Create Circle"}

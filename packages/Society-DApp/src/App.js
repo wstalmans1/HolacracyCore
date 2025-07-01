@@ -65,7 +65,7 @@ function App() {
         name: circle.purpose,
         attributes: {
           id: id,
-          type: circle.circleType === 0 ? "Policy" : "Implementation",
+          type: Number(circle.circleType) === 0 ? "Policy" : "Implementation",
           parentId: circle.parentId,
         },
         children: children,
@@ -264,7 +264,11 @@ function App() {
       {!account ? (
         <button onClick={connectWallet}>Connect Wallet</button>
       ) : (
-        <div>Connected: {account}</div>
+        <div style={{ fontSize: '14px', color: '#666' }}>
+          <strong>Connected Wallet</strong>: <span style={{ fontSize: '14px' }}>{account}</span>
+          {' | '}
+          <strong>Contract</strong>: <span style={{ fontSize: '14px' }}>{CIRCLE_HIERARCHY_ADDRESS}</span>
+        </div>
       )}
       <hr />
       {loading && <div>Loading hierarchy...</div>}

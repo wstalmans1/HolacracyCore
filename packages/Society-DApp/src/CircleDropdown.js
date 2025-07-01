@@ -20,6 +20,11 @@ const CircleDropdown = ({
     onClose();
   };
 
+  const circleType = circles && circles[circleId]?.circleType;
+  const isPolicy = Number(circleType) === 0;
+  const typeName = isPolicy ? "Policy" : "Implementation";
+  const typeColor = isPolicy ? '#3498db' : '#2ecc71';
+
   const tabs = [
     { id: 'create', label: 'Create Child', component: CreateCircleForm },
     { id: 'edit', label: 'Edit', component: EditCircleForm },
@@ -35,8 +40,9 @@ const CircleDropdown = ({
         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         minWidth: '300px',
         maxWidth: '400px',
-        maxHeight: '300px',
-        overflow: 'auto'
+        maxHeight: '600px',
+        overflow: 'auto',
+        padding: '0 16px 300px 0'
       }}
       onMouseEnter={onEnter}
       onMouseLeave={onClose}
@@ -48,7 +54,7 @@ const CircleDropdown = ({
         style={{
           position: 'absolute',
           top: '8px',
-          right: '8px',
+          right: '24px',
           background: 'none',
           border: 'none',
           fontSize: '18px',
@@ -63,13 +69,14 @@ const CircleDropdown = ({
       <div style={{ 
         padding: '12px 16px', 
         borderBottom: '1px solid #eee',
-        backgroundColor: '#f8f9fa'
+        backgroundColor: '#f8f9fa',
+        marginRight: '-16px'
       }}>
         <h3 style={{ margin: 0, fontSize: '16px', color: '#2c3e50' }}>
           {circleName || 'Circle'}
         </h3>
         <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#666' }}>
-          ID: {circleId} - {circles && circles[circleId]?.circleType === 0 ? "Policy" : "Implementation"}
+          ID: {circleId} - <span style={{ color: typeColor, fontWeight: 'bold' }}>{typeName}</span>
         </p>
       </div>
 
