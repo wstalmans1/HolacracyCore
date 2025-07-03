@@ -1,5 +1,5 @@
 async function main() {
-    const contractAddress = "0x272b742BA562752868a7fA4E30c48F965DCf91CC"; // Replace with your contract's deployed address
+    const contractAddress = "0xDd5c56E73B69F344AC25B7B4Ac8155778Fe13846"; // HolacracyOrganizationFactory deployed address
     
     console.log("Verifying contract...");
     try {

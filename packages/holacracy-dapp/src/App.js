@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { ethers } from 'ethers';
 import { CIRCLE_HIERARCHY_ADDRESS, CIRCLE_HIERARCHY_ABI } from './contractInfo';
+import CirclePacking from './CirclePacking';
 
 const onboardingSteps = [
   {
@@ -185,6 +186,8 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [circleData, setCircleData] = useState(null);
+  const [fetchingCircles, setFetchingCircles] = useState(false);
 
   // Connect wallet
   const connectWallet = async () => {
@@ -241,6 +244,34 @@ function App() {
     setLoading(false);
   };
 
+  // Recursively fetch the circle hierarchy from the contract
+  async function fetchCircleTree(circleId = 0, providerOrSigner) {
+    const contract = new ethers.Contract(CIRCLE_HIERARCHY_ADDRESS, CIRCLE_HIERARCHY_ABI, providerOrSigner);
+    const [name, purpose, , subCircles, , creator] = await contract.getCircle(circleId);
+    const children = await Promise.all(
+      subCircles.map((childId) => fetchCircleTree(Number(childId), providerOrSigner))
+    );
+    return { name, purpose, creator, children };
+  }
+
+  // Fetch the circle data when the user is a partner
+  useEffect(() => {
+    async function fetchData() {
+      if (isPartner && account && window.ethereum) {
+        setFetchingCircles(true);
+        try {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const data = await fetchCircleTree(0, provider);
+          setCircleData(data);
+        } catch (e) {
+          setCircleData(null);
+        }
+        setFetchingCircles(false);
+      }
+    }
+    fetchData();
+  }, [isPartner, account]);
+
   return (
     <div className="App" style={{ textAlign: 'center', marginTop: '60px', fontFamily: 'Arial, sans-serif' }}>
       {loading && <TransactionPendingOverlay />}
@@ -269,16 +300,24 @@ function App() {
             />
           )}
           {!showOnboarding && isPartner && (
-            <div style={{ maxWidth: 420, margin: '0 auto', background: '#f8f9fa', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: 32 }}>
-              <h1 style={{ color: '#2c3e50', marginBottom: 12 }}>Welcome, Partner!</h1>
-              <p style={{ color: '#555', fontSize: 18, marginBottom: 16 }}>
-                Your wallet is connected.<br/>
-                <span style={{ fontWeight: 600, color: '#4ecdc4' }}>{account}</span>
-              </p>
-              <p style={{ color: '#888', fontSize: 16, marginBottom: 0 }}>
-                Next: Explore or create your first Circle!
-              </p>
-            </div>
+            <>
+              <div style={{ maxWidth: 420, margin: '0 auto 24px auto', textAlign: 'center' }}>
+                <p style={{ fontStyle: 'italic', color: '#666', fontSize: 15, borderLeft: '3px solid #4ecdc4', paddingLeft: 12, margin: 0 }}>
+                  "This organization is governed by the <a href="https://www.holacracy.org/constitution/5-0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>Holacracy Constitution 5.0</a>. All authority derives from this Constitution, not from individuals."
+                </p>
+              </div>
+              <div style={{ maxWidth: 340, margin: '0 auto', background: '#f8f9fa', borderRadius: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.06)', padding: '16px 18px', marginBottom: 18 }}>
+                <div style={{ color: '#2c3e50', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Welcome, Partner!</div>
+                <div style={{ color: '#555', fontSize: 14, marginBottom: 4 }}>
+                  Wallet: <span style={{ fontWeight: 600, color: '#4ecdc4', fontSize: 14 }}>{account}</span>
+                </div>
+                <div style={{ color: '#888', fontSize: 13, marginBottom: 0 }}>
+                  Next: Explore or create your first Circle!
+                </div>
+              </div>
+              {fetchingCircles && <div style={{ color: '#4ecdc4', fontWeight: 600, fontSize: 18 }}>Loading circles...</div>}
+              {circleData && <CirclePacking data={circleData} width={700} height={700} />}
+            </>
           )}
         </>
       )}

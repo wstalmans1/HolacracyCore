@@ -17,6 +17,7 @@ contract CircleHierarchy is Ownable {
         uint256[] subCircles;
         uint256[] roles;
         bool exists;
+        address creator;
     }
 
     mapping(address => bool) public isPartner;
@@ -25,7 +26,7 @@ contract CircleHierarchy is Ownable {
     mapping(uint256 => Circle) public circles;
     mapping(uint256 => Role) public roles;
 
-    event CircleCreated(uint256 indexed circleId, string name, uint256 parentId);
+    event CircleCreated(uint256 indexed circleId, string name, uint256 parentId, address creator);
     event RoleCreated(uint256 indexed roleId, string name, uint256 circleId);
     event RoleAssigned(uint256 indexed roleId, address indexed assignedTo);
     event PartnerJoined(address indexed user);
@@ -38,7 +39,8 @@ contract CircleHierarchy is Ownable {
             parentId: 0,
             subCircles: new uint256[](0),
             roles: new uint256[](0),
-            exists: true
+            exists: true,
+            creator: msg.sender
         });
     }
 
@@ -57,10 +59,11 @@ contract CircleHierarchy is Ownable {
             parentId: parentId,
             subCircles: new uint256[](0),
             roles: new uint256[](0),
-            exists: true
+            exists: true,
+            creator: msg.sender
         });
         circles[parentId].subCircles.push(circleId);
-        emit CircleCreated(circleId, name, parentId);
+        emit CircleCreated(circleId, name, parentId, msg.sender);
         return circleId;
     }
 
@@ -89,11 +92,12 @@ contract CircleHierarchy is Ownable {
         string memory purpose,
         uint256 parentId,
         uint256[] memory subCircles,
-        uint256[] memory roleIds
+        uint256[] memory roleIds,
+        address creator
     ) {
         Circle storage c = circles[circleId];
         require(c.exists, "Circle does not exist");
-        return (c.name, c.purpose, c.parentId, c.subCircles, c.roles);
+        return (c.name, c.purpose, c.parentId, c.subCircles, c.roles, c.creator);
     }
 
     function getRole(uint256 roleId) public view returns (

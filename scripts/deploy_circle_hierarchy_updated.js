@@ -1,15 +1,15 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  console.log("Deploying updated CircleHierarchy contract...");
+  console.log("Deploying HolacracyOrganizationFactory contract...");
 
-  const CircleHierarchy = await ethers.getContractFactory("CircleHierarchy");
-  const circleHierarchy = await CircleHierarchy.deploy();
+  const Factory = await ethers.getContractFactory("HolacracyOrganizationFactory");
+  const factory = await Factory.deploy();
 
-  await circleHierarchy.waitForDeployment();
+  await factory.waitForDeployment();
 
-  const address = await circleHierarchy.getAddress();
-  console.log("Updated CircleHierarchy deployed to:", address);
+  const address = await factory.getAddress();
+  console.log("HolacracyOrganizationFactory deployed to:", address);
 }
 
 main().catch((error) => {
