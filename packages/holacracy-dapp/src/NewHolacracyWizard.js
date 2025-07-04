@@ -6,7 +6,7 @@ function isValidAddress(addr) {
   return /^0x[a-fA-F0-9]{40}$/.test(addr);
 }
 
-function NewHolacracyWizard({ onClose, onCreated }) {
+function NewHolacracyWizard({ initiativeId, onClose, onCreated }) {
   const [step, setStep] = useState(0);
   const [founders, setFounders] = useState([]);
   const [anchorPurpose, setAnchorPurpose] = useState('');
@@ -58,59 +58,6 @@ function NewHolacracyWizard({ onClose, onCreated }) {
 
   const allValid = founders.length > 0 && founders.every(isValidAddress);
 
-  // Transaction Pending Overlay
-  function TransactionPendingOverlay() {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        background: 'rgba(44,62,80,0.65)',
-        zIndex: 3000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <div style={{
-          background: '#232946',
-          borderRadius: 18,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-          padding: 40,
-          maxWidth: 420,
-          width: '90%',
-          textAlign: 'center',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}>
-          <div style={{
-            width: 64,
-            height: 64,
-            border: '7px solid #4ecdc4',
-            borderTop: '7px solid transparent',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: 28,
-            boxShadow: '0 0 20px rgba(78,205,196, 0.5)',
-          }} />
-          <h3 style={{ color: '#4ecdc4', marginBottom: 12, fontWeight: 700, letterSpacing: 1 }}>Transaction Pending</h3>
-          <p style={{ color: '#fff', fontSize: 17, marginBottom: 0, opacity: 0.92 }}>
-            Please wait while your transaction is being processed on the blockchain...
-          </p>
-        </div>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
   // Focus effect for new domain/accountability
   useEffect(() => {
     if (focusField) {
@@ -122,16 +69,6 @@ function NewHolacracyWizard({ onClose, onCreated }) {
       setFocusField(null);
     }
   }, [roles, focusField]);
-
-  useEffect(() => {
-    async function fetchPreOrgPartners() {
-      if (factoryContract) {
-        const partners = await factoryContract.getPreOrgPartners();
-        setPreOrgPartners(partners);
-      }
-    }
-    fetchPreOrgPartners();
-  }, [factoryContract]);
 
   useEffect(() => {
     if (window.ethereum) {
@@ -440,7 +377,7 @@ function NewHolacracyWizard({ onClose, onCreated }) {
                         accountabilities: r.accountabilities.filter(Boolean)
                       }));
                       const assignmentInputs = assignments.map((a, i) => a ? { roleIndex: i, assignedTo: a } : null).filter(Boolean);
-                      const tx = await factory.createOrganization(founders, anchorPurpose, roleInputs, assignmentInputs);
+                      const tx = await factory.createOrganization(initiativeId, roleInputs, assignmentInputs);
                       const receipt = await tx.wait();
                       // Find the OrganizationCreated event
                       let orgAddr = '';
@@ -493,4 +430,57 @@ function NewHolacracyWizard({ onClose, onCreated }) {
   );
 }
 
-export default NewHolacracyWizard; 
+function TransactionPendingOverlay() {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'rgba(44,62,80,0.65)',
+      zIndex: 3000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        background: '#232946',
+        borderRadius: 18,
+        boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+        padding: 40,
+        maxWidth: 420,
+        width: '90%',
+        textAlign: 'center',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}>
+        <div style={{
+          width: 64,
+          height: 64,
+          border: '7px solid #4ecdc4',
+          borderTop: '7px solid transparent',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: 28,
+          boxShadow: '0 0 20px rgba(78,205,196, 0.5)',
+        }} />
+        <h3 style={{ color: '#4ecdc4', marginBottom: 12, fontWeight: 700, letterSpacing: 1 }}>Blockchain Transaction Pending</h3>
+        <p style={{ color: '#fff', fontSize: 17, marginBottom: 0, opacity: 0.92 }}>
+          Please wait while your transaction is being confirmed on the blockchain. This may take a few moments...
+        </p>
+      </div>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+export default NewHolacracyWizard;
+export { TransactionPendingOverlay }; 
