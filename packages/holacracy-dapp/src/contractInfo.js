@@ -438,43 +438,204 @@ export const CIRCLE_HIERARCHY_ABI = [
   }
 ];
 
-export const HOLACRACY_FACTORY_ADDRESS = "0xDd5c56E73B69F344AC25B7B4Ac8155778Fe13846";
+export const HOLACRACY_FACTORY_ADDRESS = "0x9AF18D34Ce7cfecb698579C5411104d459A3738a";
 export const HOLACRACY_FACTORY_ABI = [
   {
+    "anonymous": false,
     "inputs": [
-      { "internalType": "address[]", "name": "founders", "type": "address[]" },
-      { "internalType": "string", "name": "anchorPurpose", "type": "string" },
-      { "internalType": "tuple[]", "name": "initialRoles", "type": "tuple[]", "components": [
-        { "internalType": "string", "name": "name", "type": "string" },
-        { "internalType": "string", "name": "purpose", "type": "string" },
-        { "internalType": "string[]", "name": "domains", "type": "string[]" },
-        { "internalType": "string[]", "name": "accountabilities", "type": "string[]" }
-      ] },
-      { "internalType": "tuple[]", "name": "assignments", "type": "tuple[]", "components": [
-        { "internalType": "uint256", "name": "roleIndex", "type": "uint256" },
-        { "internalType": "address", "name": "assignedTo", "type": "address" }
-      ] }
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "org",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "founders",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "anchorPurpose",
+        "type": "string"
+      }
+    ],
+    "name": "OrganizationCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "partner",
+        "type": "address"
+      }
+    ],
+    "name": "PreOrgConstitutionSigned",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "PreOrgPartnersCleared",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "anchorPurpose",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "purpose",
+            "type": "string"
+          },
+          {
+            "internalType": "string[]",
+            "name": "domains",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "accountabilities",
+            "type": "string[]"
+          }
+        ],
+        "internalType": "struct HolacracyOrganization.RoleInput[]",
+        "name": "initialRoles",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "roleIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "assignedTo",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct HolacracyOrganization.RoleAssignment[]",
+        "name": "assignments",
+        "type": "tuple[]"
+      }
     ],
     "name": "createOrganization",
-    "outputs": [ { "internalType": "address", "name": "", "type": "address" } ],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "getOrganizations",
-    "outputs": [ { "internalType": "address[]", "name": "", "type": "address[]" } ],
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": true, "internalType": "address", "name": "org", "type": "address" },
-      { "indexed": false, "internalType": "address[]", "name": "founders", "type": "address[]" },
-      { "indexed": false, "internalType": "string", "name": "anchorPurpose", "type": "string" }
+    "inputs": [],
+    "name": "getPreOrgPartners",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
     ],
-    "name": "OrganizationCreated",
-    "type": "event"
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "hasSignedPreOrgConstitution",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "organizations",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "preOrgPartners",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "signPreOrgConstitution",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ];
+

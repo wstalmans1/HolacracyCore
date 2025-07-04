@@ -270,7 +270,7 @@ function App() {
       }
     }
     fetchData();
-  }, [isPartner, account]);
+  }, [isPartner, account, fetchCircleTree]);
 
   return (
     <div className="App" style={{ textAlign: 'center', marginTop: '60px', fontFamily: 'Arial, sans-serif' }}>

@@ -11,6 +11,7 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<NewHolacracyApp />} />
         <Route path="/create" element={<NewHolacracyApp />} />
         <Route path="/*" element={<App />} />
       </Routes>
