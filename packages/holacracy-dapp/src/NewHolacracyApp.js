@@ -364,7 +364,7 @@ function NewHolacracyApp() {
             )}
           </div>
           <div style={{ margin: '32px 0' }}>
-            <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 12, color: '#232946', textAlign: 'center' }}>Initiatives</div>
+            <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 12, color: '#232946', textAlign: 'left' }}>Initiatives</div>
             <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 12px rgba(44,62,80,0.07)', padding: 24, marginBottom: 18 }}>
               {loadingInitiatives ? (
                 <div style={{ color: '#888', fontSize: 14 }}>Loading initiatives...</div>
@@ -543,8 +543,8 @@ function NewHolacracyApp() {
                               )}
                               {(() => {
                                 const shouldShowStartButton = account && partners[ini.id] && partners[ini.id].map(a => a.toLowerCase()).includes(account.toLowerCase()) && !created[ini.id];
-                                console.log(`Initiative ${ini.id} - shouldShowStartButton:`, shouldShowStartButton, 'account:', account, 'partners:', partners[ini.id], 'created:', created[ini.id]);
-                                return shouldShowStartButton;
+                                console.log(`Initiative ${ini.id} - shouldShowStartButton:`, shouldShowButton, 'account:', account, 'partners:', partners[ini.id], 'created:', created[ini.id]);
+                                return shouldShowButton;
                               })() && (
                                 <button
                                   style={{ marginTop: 12, background: '#232946', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}
@@ -563,6 +563,7 @@ function NewHolacracyApp() {
                               })() && (
                                 <NewHolacracyWizard 
                                   initiativeId={ini.id} 
+                                  initiativePurpose={ini.purpose}
                                   account={account}
                                   onClose={() => setCreated(prev => ({ ...prev, [ini.id]: false }))} 
                                   onCreated={() => setCreated(prev => ({ ...prev, [ini.id]: 'done' }))} 
@@ -621,9 +622,9 @@ function NewHolacracyApp() {
             ) : (
               <table style={{ width: '100%', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(44,62,80,0.07)', marginBottom: 32 }}>
                 <thead>
-                  <tr style={{ background: '#f8f9fa' }}>
+                  <tr style={{ background: '#e3eaf2' }}>
                     <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Address</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Anchor Purpose</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Organization Purpose</th>
                     <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Founders</th>
                   </tr>
                 </thead>

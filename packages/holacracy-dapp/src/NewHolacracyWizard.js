@@ -6,10 +6,9 @@ function isValidAddress(addr) {
   return /^0x[a-fA-F0-9]{40}$/.test(addr);
 }
 
-function NewHolacracyWizard({ initiativeId, account: parentAccount, onClose, onCreated }) {
+function NewHolacracyWizard({ initiativeId, initiativePurpose, account: parentAccount, onClose, onCreated }) {
   const [step, setStep] = useState(0);
   const [founders, setFounders] = useState([]);
-  const [anchorPurpose, setAnchorPurpose] = useState('Catalyzing a flourishing ecosystem for regenerative collaboration');
   const [roles, setRoles] = useState([
     { name: '', purpose: '', domains: [''], accountabilities: [''] }
   ]);
@@ -261,8 +260,8 @@ function NewHolacracyWizard({ initiativeId, account: parentAccount, onClose, onC
                 <ul style={{ textAlign: 'left', margin: '8px 0 12px 18px', padding: 0 }}>
                   {founders.map((f, i) => <li key={i} style={{ fontSize: 14 }}>{f}</li>)}
                 </ul>
-                <b>Anchor Circle Purpose:</b>
-                <div style={{ fontSize: 14, margin: '6px 0 12px 0' }}>{anchorPurpose}</div>
+                <b>Organization Purpose:</b>
+                <div style={{ fontSize: 14, margin: '6px 0 12px 0' }}>{initiativePurpose}</div>
                 <b>Roles:</b>
                 <ul style={{ textAlign: 'left', margin: '8px 0 12px 18px', padding: 0 }}>
                   {roles.map((r, i) => (
@@ -299,7 +298,7 @@ function NewHolacracyWizard({ initiativeId, account: parentAccount, onClose, onC
                         accountabilities: r.accountabilities.filter(Boolean)
                       }));
                       const assignmentInputs = assignments.map((a, i) => a ? { roleIndex: i, assignedTo: a } : null).filter(Boolean);
-                      const tx = await factory.createOrganization(initiativeId, anchorPurpose, roleInputs, assignmentInputs);
+                      const tx = await factory.createOrganization(initiativeId, initiativePurpose, roleInputs, assignmentInputs);
                       const receipt = await tx.wait();
                       // Find the OrganizationCreated event
                       let orgAddr = '';
@@ -320,7 +319,7 @@ function NewHolacracyWizard({ initiativeId, account: parentAccount, onClose, onC
                           // Prepare constructor arguments
                           const constructorArgs = [
                             founders, // founders array
-                            anchorPurpose // anchor purpose string
+                            initiativePurpose // anchor purpose string
                           ];
                           const sourcifyUrl = await verifyOnSourcify(orgAddr, constructorArgs);
                           if (sourcifyUrl) {
