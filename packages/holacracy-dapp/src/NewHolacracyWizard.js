@@ -130,6 +130,9 @@ function NewHolacracyWizard({ initiativeId, initiativePurpose, account: parentAc
         <div style={{ padding: 36, overflowY: 'auto', flex: 1, minHeight: 120 }}>
           {deploying && <TransactionPendingOverlay />}
           <h2 style={{ color: '#232946', marginBottom: 18 }}>Create New Holacracy</h2>
+          <div style={{ fontSize: 15, color: '#555', marginBottom: 18 }}>
+            To launch a Holacracy Organisation, first define its name and its purpose and have the co-founding partners join by signing the constitution. Once all co-founding partners have joined, the initiative can be launched as an active Holacracy organization.
+          </div>
           {step === 0 && (
             <div>
               <div style={{ fontWeight: 600, marginBottom: 10 }}>Step 1: Define Initial Roles</div>
@@ -275,10 +278,10 @@ function NewHolacracyWizard({ initiativeId, initiativePurpose, account: parentAc
                 </ul>
               </div>
               {deployError && <div style={{ color: '#ee6c4d', fontSize: 14, marginBottom: 10 }}>{deployError}</div>}
-              {orgAddress ? (
+              {orgAddress && !deploying ? (
                 <div style={{ color: '#4ecdc4', fontWeight: 700, fontSize: 17, marginTop: 18, wordBreak: 'break-all', maxWidth: '100%' }}>
                   🎉 Organization deployed!<br/>
-                  Address: <a href={`https://sepolia.etherscan.io/address/${orgAddress}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3a86ff', wordBreak: 'break-all', display: 'inline-block', maxWidth: '100%' }}>{orgAddress}</a>
+                  Address: <a href={`https://sourcify.dev/#/lookup/${orgAddress}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3a86ff', wordBreak: 'break-all', display: 'inline-block', maxWidth: '100%' }}>{orgAddress}</a>
                   <button onClick={() => navigator.clipboard.writeText(orgAddress)} style={{ marginLeft: 8, background: 'none', border: 'none', color: '#4ecdc4', fontWeight: 600, cursor: 'pointer', fontSize: 15 }}>Copy</button>
                 </div>
               ) : (
@@ -312,7 +315,6 @@ function NewHolacracyWizard({ initiativeId, initiativePurpose, account: parentAc
                         } catch {}
                       }
                       setOrgAddress(orgAddr || 'Deployed (address not found in logs)');
-                      
                       // Attempt to verify the contract
                       if (orgAddr) {
                         try {

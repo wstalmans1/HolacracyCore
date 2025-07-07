@@ -295,6 +295,32 @@ function NewHolacracyApp() {
       setLoadingOrganizations(true);
       try {
         const orgAddresses = await factoryContract.getOrganizations();
+        // Fetch mapping from org address to initiative ID
+        const orgToInitiativeIds = await Promise.all(orgAddresses.map(async (orgAddr) => {
+          try {
+            // If the contract has getOrganizationInitiative, use it:
+            const initiativeId = await factoryContract.getOrganizationInitiative(orgAddr);
+            return { orgAddr, initiativeId: Number(initiativeId) };
+          } catch {
+            return { orgAddr, initiativeId: null };
+          }
+        }));
+        // Build a map for quick lookup
+        const orgToInitiativeMap = {};
+        orgToInitiativeIds.forEach(({ orgAddr, initiativeId }) => {
+          orgToInitiativeMap[orgAddr] = initiativeId;
+        });
+        // Fetch all initiatives (already in state, but ensure up-to-date)
+        const ids = await factoryContract.getInitiativeIds();
+        const initiativesList = await Promise.all(ids.map(async (id) => {
+          const [iid, name, purpose, creator, partnerCount, exists] = await factoryContract.getInitiative(id);
+          return { id: Number(iid), name, purpose, creator, partnerCount: Number(partnerCount), exists };
+        }));
+        // Build a map for quick lookup
+        const initiativeMap = {};
+        initiativesList.forEach(ini => {
+          initiativeMap[ini.id] = ini;
+        });
         const provider = new ethers.BrowserProvider(window.ethereum);
         const orgs = await Promise.all(orgAddresses.map(async (orgAddr) => {
           try {
@@ -311,9 +337,17 @@ function NewHolacracyApp() {
                 break;
               }
             }
-            return { address: orgAddr, anchorPurpose, founders };
+            const initiativeId = orgToInitiativeMap[orgAddr];
+            const initiative = initiativeMap[initiativeId] || {};
+            return {
+              address: orgAddr,
+              anchorPurpose,
+              founders,
+              initiativeName: initiative.name || '(Unknown)',
+              initiativePurpose: initiative.purpose || anchorPurpose,
+            };
           } catch (e) {
-            return { address: orgAddr, anchorPurpose: 'N/A', founders: [] };
+            return { address: orgAddr, anchorPurpose: 'N/A', founders: [], initiativeName: '(Unknown)', initiativePurpose: 'N/A' };
           }
         }));
         setOrganizations(orgs);
@@ -340,10 +374,7 @@ function NewHolacracyApp() {
               </a>
             </h2>
             <div style={{ color: '#232946', fontSize: 17, marginBottom: 18, lineHeight: 1.6, maxWidth: 650, padding: '0 24px', marginLeft: 'auto', marginRight: 'auto', textAlign: 'justify' }}>
-              To launch a Holacracy Organisation, first define its name and its purpose and have the co-founding partners join by signing the <a href="https://www.holacracy.org/constitution/5.0/" target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>constitution</a>. Once all co-founding partners have joined, the initiative can be launched as an active Holacracy organization.
-            </div>
-            <div style={{ fontWeight: 400, fontSize: 15, color: '#bbb', margin: '10px auto 0 auto', maxWidth: 650, padding: '0 24px', marginLeft: 'auto', marginRight: 'auto', textAlign: 'justify' }}>
-              <b>Note:</b> According to the Holacracy Constitution, all partners in the organization are equal. Founding partners have no special rights compared to those who join later.
+              To launch a Holacracy Organisation, first define its name and its purpose and have the co-founding partners join by signing the constitution. Note that all partners in a Holacracy organization are equal and founding partners have no special rights compared to those who join later. Once all co-founding partners have joined, the initiative can be launched as an active Holacracy organization.
             </div>
             {!account && (
               <>
@@ -623,19 +654,21 @@ function NewHolacracyApp() {
               <table style={{ width: '100%', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(44,62,80,0.07)', marginBottom: 32 }}>
                 <thead>
                   <tr style={{ background: '#e3eaf2' }}>
-                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Address</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Organization Purpose</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Name</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Purpose</th>
                     <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Founders</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Address</th>
                   </tr>
                 </thead>
                 <tbody>
                   {organizations.map((org, idx) => (
                     <tr key={org.address} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '8px 12px', wordBreak: 'break-all' }}>{org.initiativeName}</td>
+                      <td style={{ padding: '8px 12px' }}>{org.initiativePurpose}</td>
+                      <td style={{ padding: '8px 12px' }}>{org.founders.length}</td>
                       <td style={{ padding: '8px 12px', wordBreak: 'break-all' }}>
                         <a href={`https://sourcify.dev/#/lookup/${org.address}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4ecdc4', textDecoration: 'underline' }}>{org.address}</a>
                       </td>
-                      <td style={{ padding: '8px 12px' }}>{org.anchorPurpose}</td>
-                      <td style={{ padding: '8px 12px' }}>{org.founders.length}</td>
                     </tr>
                   ))}
                 </tbody>
