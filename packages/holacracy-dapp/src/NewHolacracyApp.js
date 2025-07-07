@@ -543,8 +543,8 @@ function NewHolacracyApp() {
                               )}
                               {(() => {
                                 const shouldShowStartButton = account && partners[ini.id] && partners[ini.id].map(a => a.toLowerCase()).includes(account.toLowerCase()) && !created[ini.id];
-                                console.log(`Initiative ${ini.id} - shouldShowStartButton:`, shouldShowButton, 'account:', account, 'partners:', partners[ini.id], 'created:', created[ini.id]);
-                                return shouldShowButton;
+                                console.log(`Initiative ${ini.id} - shouldShowStartButton:`, shouldShowStartButton, 'account:', account, 'partners:', partners[ini.id], 'created:', created[ini.id]);
+                                return shouldShowStartButton;
                               })() && (
                                 <button
                                   style={{ marginTop: 12, background: '#232946', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}
