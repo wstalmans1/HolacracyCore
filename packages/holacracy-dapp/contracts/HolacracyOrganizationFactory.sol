@@ -7,6 +7,7 @@ contract HolacracyOrganizationFactory {
     struct Initiative {
         uint id;
         string name;
+        string purpose;
         address creator;
         address[] partners;
         mapping(address => bool) hasSigned;
@@ -18,21 +19,22 @@ contract HolacracyOrganizationFactory {
     uint[] public initiativeIds;
     address[] public organizations;
 
-    event InitiativeStarted(uint indexed id, string name, address indexed creator);
+    event InitiativeStarted(uint indexed id, string name, string purpose, address indexed creator);
     event InitiativeCancelled(uint indexed id);
     event PreOrgConstitutionSigned(uint indexed initiativeId, address indexed partner);
     event OrganizationCreated(address indexed org, uint indexed initiativeId, address[] founders, string anchorPurpose);
 
     // Start a new pre-org initiative
-    function startPreOrgInitiative(string memory name) public returns (uint) {
+    function startPreOrgInitiative(string memory name, string memory purpose) public returns (uint) {
         uint id = nextInitiativeId++;
         Initiative storage ini = initiatives[id];
         ini.id = id;
         ini.name = name;
+        ini.purpose = purpose;
         ini.creator = msg.sender;
         ini.exists = true;
         initiativeIds.push(id);
-        emit InitiativeStarted(id, name, msg.sender);
+        emit InitiativeStarted(id, name, purpose, msg.sender);
         return id;
     }
 
@@ -72,10 +74,10 @@ contract HolacracyOrganizationFactory {
 
     // Get initiative info (id, name, creator, partner count, exists)
     function getInitiative(uint id) public view returns (
-        uint, string memory, address, uint, bool
+        uint, string memory, string memory, address, uint, bool
     ) {
         Initiative storage ini = initiatives[id];
-        return (ini.id, ini.name, ini.creator, ini.partners.length, ini.exists);
+        return (ini.id, ini.name, ini.purpose, ini.creator, ini.partners.length, ini.exists);
     }
 
     // Get all open initiative ids

@@ -8,7 +8,14 @@ const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.28",
+  solidity: {
+    version: "0.8.28",
+    settings: {
+      metadata: {
+        bytecodeHash: "ipfs"
+      }
+    }
+  },
   paths: {
     sources: "packages/holacracy-dapp/contracts"
   },
